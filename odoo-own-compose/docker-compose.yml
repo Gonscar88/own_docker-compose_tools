@@ -1,0 +1,38 @@
+version: '3.1'
+services:
+    web:
+        image: odoo:17.0-20240826
+        depends_on:
+            - db
+        ports:
+            # El host_port deberá pasarse al correr el contenedor para asegurar que no choca con otros contenedores
+            - "${HOST_PORT}:8069"
+        volumes:
+            - own_project-web-data:/var/lib/odoo
+            - ./config:/etc/odoo
+            - ./../own_addons:/mnt/extra-addons/own_addons
+        environment:
+            - PASSWORD_FILE=/run/secrets/postgresql_password
+        secrets:
+            - postgresql_password
+
+    db:
+        image: postgres:15
+        environment:
+            - POSTGRES_DB=postgres
+            - POSTGRES_PASSWORD_FILE=/run/secrets/postgresql_password
+            - POSTGRES_USER=odoo
+            - PGDATA=/var/lib/postgresql/data/pgdata
+        volumes:
+            - own_project-db-data:/var/lib/postgresql/data/pgdata
+        secrets:
+            - postgresql_password
+        restart: always
+
+volumes:
+    own_project-web-data:
+    own_project-db-data:
+
+secrets:
+  postgresql_password:
+    file: ./config/odoo_pg_pass
